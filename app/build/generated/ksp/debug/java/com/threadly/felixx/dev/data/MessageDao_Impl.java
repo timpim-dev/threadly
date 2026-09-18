@@ -39,7 +39,7 @@ public final class MessageDao_Impl implements MessageDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR IGNORE INTO `messages` (`id`,`threadId`,`providerMessageId`,`senderName`,`senderEmail`,`recipients`,`cc`,`body`,`sentAt`,`isFromUser`,`isRead`,`inReplyTo`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `messages` (`id`,`threadId`,`providerMessageId`,`senderName`,`senderEmail`,`recipients`,`cc`,`body`,`sentAt`,`isFromUser`,`isRead`,`inReplyTo`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -168,6 +168,79 @@ public final class MessageDao_Impl implements MessageDao {
     final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
     int _argIndex = 1;
     _statement.bindString(_argIndex, providerId);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<MessageEntity>() {
+      @Override
+      @Nullable
+      public MessageEntity call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfThreadId = CursorUtil.getColumnIndexOrThrow(_cursor, "threadId");
+          final int _cursorIndexOfProviderMessageId = CursorUtil.getColumnIndexOrThrow(_cursor, "providerMessageId");
+          final int _cursorIndexOfSenderName = CursorUtil.getColumnIndexOrThrow(_cursor, "senderName");
+          final int _cursorIndexOfSenderEmail = CursorUtil.getColumnIndexOrThrow(_cursor, "senderEmail");
+          final int _cursorIndexOfRecipients = CursorUtil.getColumnIndexOrThrow(_cursor, "recipients");
+          final int _cursorIndexOfCc = CursorUtil.getColumnIndexOrThrow(_cursor, "cc");
+          final int _cursorIndexOfBody = CursorUtil.getColumnIndexOrThrow(_cursor, "body");
+          final int _cursorIndexOfSentAt = CursorUtil.getColumnIndexOrThrow(_cursor, "sentAt");
+          final int _cursorIndexOfIsFromUser = CursorUtil.getColumnIndexOrThrow(_cursor, "isFromUser");
+          final int _cursorIndexOfIsRead = CursorUtil.getColumnIndexOrThrow(_cursor, "isRead");
+          final int _cursorIndexOfInReplyTo = CursorUtil.getColumnIndexOrThrow(_cursor, "inReplyTo");
+          final MessageEntity _result;
+          if (_cursor.moveToFirst()) {
+            final String _tmpId;
+            _tmpId = _cursor.getString(_cursorIndexOfId);
+            final String _tmpThreadId;
+            _tmpThreadId = _cursor.getString(_cursorIndexOfThreadId);
+            final String _tmpProviderMessageId;
+            _tmpProviderMessageId = _cursor.getString(_cursorIndexOfProviderMessageId);
+            final String _tmpSenderName;
+            _tmpSenderName = _cursor.getString(_cursorIndexOfSenderName);
+            final String _tmpSenderEmail;
+            _tmpSenderEmail = _cursor.getString(_cursorIndexOfSenderEmail);
+            final String _tmpRecipients;
+            _tmpRecipients = _cursor.getString(_cursorIndexOfRecipients);
+            final String _tmpCc;
+            _tmpCc = _cursor.getString(_cursorIndexOfCc);
+            final String _tmpBody;
+            _tmpBody = _cursor.getString(_cursorIndexOfBody);
+            final long _tmpSentAt;
+            _tmpSentAt = _cursor.getLong(_cursorIndexOfSentAt);
+            final boolean _tmpIsFromUser;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfIsFromUser);
+            _tmpIsFromUser = _tmp != 0;
+            final boolean _tmpIsRead;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfIsRead);
+            _tmpIsRead = _tmp_1 != 0;
+            final String _tmpInReplyTo;
+            if (_cursor.isNull(_cursorIndexOfInReplyTo)) {
+              _tmpInReplyTo = null;
+            } else {
+              _tmpInReplyTo = _cursor.getString(_cursorIndexOfInReplyTo);
+            }
+            _result = new MessageEntity(_tmpId,_tmpThreadId,_tmpProviderMessageId,_tmpSenderName,_tmpSenderEmail,_tmpRecipients,_tmpCc,_tmpBody,_tmpSentAt,_tmpIsFromUser,_tmpIsRead,_tmpInReplyTo);
+          } else {
+            _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getFirstForThread(final String threadId,
+      final Continuation<? super MessageEntity> $completion) {
+    final String _sql = "SELECT * FROM messages WHERE threadId = ? ORDER BY sentAt ASC LIMIT 1";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, threadId);
     final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
     return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<MessageEntity>() {
       @Override

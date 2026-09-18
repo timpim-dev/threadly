@@ -31,13 +31,12 @@ object MailParser {
         
         val threadIdHeader = mime?.getHeader("Thread-Topic")?.firstOrNull()
             ?: mime?.getHeader("Thread-Index")?.firstOrNull()
-            ?: normalizeSubject(msg.subject ?: "")
             
         val bodyText = extractText(msg)
 
         return IncomingMail(
             providerMessageId = messageId,
-            providerThreadId = threadIdHeader.ifBlank { null },
+            providerThreadId = threadIdHeader?.ifBlank { null },
             subject = msg.subject ?: "",
             senderName = senderName,
             senderEmail = senderEmail,
@@ -53,36 +52,36 @@ object MailParser {
         )
     }
 
-    private fun extractText(part: Part): String {
-        if (part.isMimeType("text/plain")) {
-            return part.content?.toString() ?: ""
-        }
-        if (part.isMimeType("text/html")) {
-            val html = part.content?.toString() ?: ""
-            return html.replace(Regex("<[^>]*>"), " ").replace(Regex("\\s+"), " ").trim()
-        }
-        if (part.isMimeType("multipart/alternative")) {
-            val mp = part.content as Multipart
-            var htmlText = ""
-            for (i in 0 until mp.count) {
-                val bodyPart = mp.getBodyPart(i)
-                if (bodyPart.isMimeType("text/plain")) {
-                    return extractText(bodyPart)
+    private fun extractText(part: Part, depth: Int = 0): String {
+        if (depth > 5) return ""
+        return runCatching {
+            when {
+                part.isMimeType("text/plain") -> {
+                    val stream = part.inputStream ?: return ""
+                    val bytes = stream.readNBytes(100_000) // cap at 100KB
+                    String(bytes, Charsets.UTF_8)
                 }
-                if (bodyPart.isMimeType("text/html")) {
-                    htmlText = extractText(bodyPart)
+                part.isMimeType("text/html") -> {
+                    val stream = part.inputStream ?: return ""
+                    val html = String(stream.readNBytes(100_000), Charsets.UTF_8)
+                    html.replace(Regex("<[^>]*>"), " ").replace(Regex("\\s+"), " ").trim()
                 }
+                part.isMimeType("multipart/alternative") -> {
+                    val mp = part.content as Multipart
+                    var htmlText = ""
+                    for (i in 0 until mp.count) {
+                        val bp = mp.getBodyPart(i)
+                        if (bp.isMimeType("text/plain")) return extractText(bp, depth + 1)
+                        if (bp.isMimeType("text/html")) htmlText = extractText(bp, depth + 1)
+                    }
+                    htmlText
+                }
+                part.isMimeType("multipart/*") -> {
+                    val mp = part.content as Multipart
+                    (0 until mp.count).joinToString("\n") { extractText(mp.getBodyPart(it), depth + 1) }
+                }
+                else -> ""
             }
-            return htmlText
-        }
-        if (part.isMimeType("multipart/*")) {
-            val mp = part.content as Multipart
-            val sb = StringBuilder()
-            for (i in 0 until mp.count) {
-                sb.append(extractText(mp.getBodyPart(i)))
-            }
-            return sb.toString()
-        }
-        return ""
+        }.getOrElse { "" }
     }
 }

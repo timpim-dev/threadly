@@ -15,19 +15,26 @@ import kotlinx.coroutines.withContext
 import java.util.Properties
 
 class GmailProvider(private val context: Context) : MailProvider {
+    companion object { private const val TAG = "GmailProvider" }
+
     private fun getToken(account: AccountEntity): String {
+        android.util.Log.d(TAG, "getToken: ${account.email}")
         val androidAccount = android.accounts.Account(account.email, "com.google")
-        return GoogleAuthUtil.getToken(context, androidAccount, "oauth2:https://mail.google.com/")
+        val token = GoogleAuthUtil.getToken(context, androidAccount, "oauth2:https://mail.google.com/")
+        android.util.Log.d(TAG, "getToken: OK len=${token.length}")
+        return token
     }
 
     override suspend fun receive(account: AccountEntity, cursor: String?): ProviderPage = withContext(Dispatchers.IO) {
+        android.util.Log.d(TAG, "receive: start")
         val token = getToken(account)
+        android.util.Log.d(TAG, "receive: got token, connecting IMAP")
         val props = Properties().apply {
             put("mail.store.protocol", "imaps")
             put("mail.imaps.host", "imap.gmail.com")
             put("mail.imaps.port", "993")
-            put("mail.imaps.connectiontimeout", "15000")
-            put("mail.imaps.timeout", "15000")
+            put("mail.imaps.connectiontimeout", "10000")
+            put("mail.imaps.timeout", "10000")
             put("mail.imaps.auth.mechanisms", "XOAUTH2")
         }
         val session = Session.getInstance(props)
@@ -36,14 +43,34 @@ class GmailProvider(private val context: Context) : MailProvider {
         try {
             store = session.getStore("imaps")
             store.connect("imap.gmail.com", account.email, token)
+            android.util.Log.d(TAG, "receive: connected")
             folder = store.getFolder("INBOX")
             folder.open(Folder.READ_ONLY)
             val messageCount = folder.messageCount
+            android.util.Log.d(TAG, "receive: inbox has $messageCount messages")
             if (messageCount == 0) return@withContext ProviderPage(emptyList(), cursor)
-            
+
             val start = Math.max(1, messageCount - 50)
             val messages = folder.getMessages(start, messageCount)
-            val parsed = messages.map { MailParser.parse(it, account.email) }.reversed()
+            // Pre-fetch envelopes + flags in bulk to avoid per-message RTT for headers
+            val profile = jakarta.mail.FetchProfile().apply {
+                add(jakarta.mail.FetchProfile.Item.ENVELOPE)
+                add(jakarta.mail.FetchProfile.Item.FLAGS)
+                add(jakarta.mail.FetchProfile.Item.CONTENT_INFO)
+                add("In-Reply-To")
+                add("References")
+                add("Thread-Topic")
+                add("Thread-Index")
+                add("Message-ID")
+            }
+            folder.fetch(messages, profile)
+            android.util.Log.d(TAG, "receive: fetch profile done, parsing...")
+            val parsed = messages.mapNotNull { msg ->
+                runCatching { MailParser.parse(msg, account.email) }
+                    .onFailure { android.util.Log.w(TAG, "parse failed: ${it.message}") }
+                    .getOrNull()
+            }.reversed()
+            android.util.Log.d(TAG, "receive: parsed ${parsed.size} messages")
             ProviderPage(parsed, cursor)
         } finally {
             runCatching { folder?.close(false) }

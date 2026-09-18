@@ -118,7 +118,8 @@ data class AppSettingsEntity(
     val messageCornerRadius: Int = 18,
     val compactLayout: Boolean = false,
     val enterToSend: Boolean = false,
-    val showAvatarsInThread: Boolean = true
+    val showAvatarsInThread: Boolean = true,
+    val openRouterApiKey: String? = null
 )
 
 @Entity(tableName = "sync_states")

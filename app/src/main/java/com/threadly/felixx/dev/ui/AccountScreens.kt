@@ -49,16 +49,11 @@ fun ProviderSelectionScreen(
                         imapHost = "",
                         smtpHost = ""
                     )
-                    // Test connection to ensure token and scopes are working
-                    val provider = app.providerRegistry.forAccount(entity)
-                    val connResult = provider.testConnection(entity)
-                    if (connResult.isSuccess) {
-                        app.repository.saveAccount(entity)
-                        onAccountAdded()
-                    } else {
-                        error = connResult.exceptionOrNull()?.message ?: "Failed to verify Gmail connection"
-                        isLoading = false
-                    }
+                    // Save immediately — no blocking connection test
+                    app.repository.saveAccount(entity)
+                    // Kick off a background sync
+                    app.triggerSync()
+                    onAccountAdded()
                 }
             } else {
                 error = "Failed to get email from Google Sign In"

@@ -17,7 +17,7 @@ class RoomConverters {
 
 @Database(
     entities = [AccountEntity::class, ClubEntity::class, ClubAccountCrossRef::class, ClubKeywordEntity::class, ClubContactEntity::class, ThreadEntity::class, MessageEntity::class, AttachmentEntity::class, AppSettingsEntity::class, SyncStateEntity::class],
-    version = 1,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(RoomConverters::class)

@@ -41,13 +41,32 @@ interface MailProvider {
     suspend fun testConnection(account: AccountEntity): Result<Unit>
 }
 
-fun normalizeSubject(subject: String): String = subject
-    .replace(Regex("^\\s*((re|fw|fwd)\\s*:\\s*)+", RegexOption.IGNORE_CASE), "")
-    .trim()
-    .lowercase()
+fun normalizeSubject(subject: String): String {
+    var s = subject
+    var changed = true
+    while (changed) {
+        val old = s
+        s = s.replace(Regex("^\\s*\\[.*?\\]\\s*"), "")
+             .replace(Regex("^\\s*(re|fw|fwd|aw)\\s*:\\s*", RegexOption.IGNORE_CASE), "")
+        changed = (old != s)
+    }
+    return s.trim().lowercase()
+}
 
-fun cleanMessageBody(body: String): String = body
-    .replace(Regex("(?ms)^>.*?(\\n|$)"), "")
-    .replace(Regex("(?ims)^[- ]{2,3}\\s*original message.*$"), "")
-    .replace(Regex("(?ims)^[- ]{2,3}\\s*forwarded message.*$"), "")
-    .trim()
+fun cleanMessageBody(body: String): String {
+    // Decode any leftover HTML entities that might have slipped into plain text
+    var cleaned = android.text.Html.fromHtml(body, android.text.Html.FROM_HTML_MODE_LEGACY).toString()
+
+    cleaned = cleaned.replace(Regex("(?ms)^>.*?(\\n|$)"), "")
+    cleaned = cleaned.replace(Regex("(?ims)^[- _]{2,30}\\s*(original|forwarded) message.*$"), "")
+    
+    // Strip Gmail/Outlook/Orange reply headers and signatures
+    val replyPattern = Regex("(?ims)(_{3,}\\s*De\\s?:|[-_]{3,}\\s*De\\s?:|On\\s.+?wrote:|Le\\s.+?a\\s[eé]crit\\s?:|Envoy[eé]\\s+depuis\\s+(mon\\s+iPhone|l'application\\s+Mail\\s+Orange|mon\\s+appareil|mon\\s+mobile|mon\\s+smartphone).*?$).*")
+    cleaned = cleaned.replace(replyPattern, "")
+    
+    // Strip Google Groups footers
+    val groupsFooterPattern = Regex("(?ims)---\\s*(Vous recevez ce message|You received this message).*")
+    cleaned = cleaned.replace(groupsFooterPattern, "")
+    
+    return cleaned.trim()
+}

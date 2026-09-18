@@ -35,6 +35,7 @@ interface ThreadDao {
     @Query("SELECT * FROM threads WHERE id = :id") fun observe(id: String): Flow<ThreadEntity?>
     @Query("SELECT * FROM threads WHERE id = :id") suspend fun get(id: String): ThreadEntity?
     @Query("SELECT * FROM threads WHERE providerThreadId = :providerId LIMIT 1") suspend fun findByProviderId(providerId: String): ThreadEntity?
+    @Query("SELECT * FROM threads WHERE clubId = :clubId") suspend fun getForClub(clubId: String): List<ThreadEntity>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun upsert(thread: ThreadEntity)
     @Query("UPDATE threads SET deletedAt = :at WHERE id = :id") suspend fun softDelete(id: String, at: Long)
     @Query("UPDATE threads SET unreadCount = 0 WHERE id = :id") suspend fun markRead(id: String)
@@ -43,18 +44,22 @@ interface ThreadDao {
     @Query("UPDATE threads SET snoozedUntil = :until WHERE id = :id") suspend fun snooze(id: String, until: Long)
     @Query("UPDATE threads SET deletedAt = NULL WHERE id = :id") suspend fun undoDelete(id: String)
     @Query("UPDATE threads SET muted = :muted WHERE id = :id") suspend fun setMuted(id: String, muted: Boolean)
+    @Query("SELECT * FROM threads") suspend fun getAll(): List<ThreadEntity>
+    @Query("UPDATE threads SET clubId = :clubId WHERE id = :id") suspend fun updateClubId(id: String, clubId: String)
 }
 
 @Dao
 interface MessageDao {
     @Query("SELECT * FROM messages WHERE threadId = :threadId ORDER BY sentAt") fun observeForThread(threadId: String): Flow<List<MessageEntity>>
-    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertAll(messages: List<MessageEntity>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(messages: List<MessageEntity>)
     @Query("SELECT * FROM messages WHERE providerMessageId = :providerId LIMIT 1") suspend fun findByProviderId(providerId: String): MessageEntity?
+    @Query("SELECT * FROM messages WHERE threadId = :threadId ORDER BY sentAt ASC LIMIT 1") suspend fun getFirstForThread(threadId: String): MessageEntity?
 }
 
 @Dao
 interface SettingsDao {
     @Query("SELECT * FROM app_settings WHERE id = 1") fun observe(): Flow<AppSettingsEntity?>
+    @Query("SELECT * FROM app_settings WHERE id = 1") suspend fun getSettings(): AppSettingsEntity?
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun save(settings: AppSettingsEntity)
 }
 

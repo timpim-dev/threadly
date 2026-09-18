@@ -50,6 +50,8 @@ public final class ThreadDao_Impl implements ThreadDao {
 
   private final SharedSQLiteStatement __preparedStmtOfSetMuted;
 
+  private final SharedSQLiteStatement __preparedStmtOfUpdateClubId;
+
   public ThreadDao_Impl(@NonNull final RoomDatabase __db) {
     this.__db = __db;
     this.__insertionAdapterOfThreadEntity = new EntityInsertionAdapter<ThreadEntity>(__db) {
@@ -153,6 +155,14 @@ public final class ThreadDao_Impl implements ThreadDao {
       @NonNull
       public String createQuery() {
         final String _query = "UPDATE threads SET muted = ? WHERE id = ?";
+        return _query;
+      }
+    };
+    this.__preparedStmtOfUpdateClubId = new SharedSQLiteStatement(__db) {
+      @Override
+      @NonNull
+      public String createQuery() {
+        final String _query = "UPDATE threads SET clubId = ? WHERE id = ?";
         return _query;
       }
     };
@@ -356,6 +366,34 @@ public final class ThreadDao_Impl implements ThreadDao {
           }
         } finally {
           __preparedStmtOfSetMuted.release(_stmt);
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object updateClubId(final String id, final String clubId,
+      final Continuation<? super Unit> $completion) {
+    return CoroutinesRoom.execute(__db, true, new Callable<Unit>() {
+      @Override
+      @NonNull
+      public Unit call() throws Exception {
+        final SupportSQLiteStatement _stmt = __preparedStmtOfUpdateClubId.acquire();
+        int _argIndex = 1;
+        _stmt.bindString(_argIndex, clubId);
+        _argIndex = 2;
+        _stmt.bindString(_argIndex, id);
+        try {
+          __db.beginTransaction();
+          try {
+            _stmt.executeUpdateDelete();
+            __db.setTransactionSuccessful();
+            return Unit.INSTANCE;
+          } finally {
+            __db.endTransaction();
+          }
+        } finally {
+          __preparedStmtOfUpdateClubId.release(_stmt);
         }
       }
     }, $completion);
@@ -734,6 +772,193 @@ public final class ThreadDao_Impl implements ThreadDao {
             _result = new ThreadEntity(_tmpId,_tmpClubId,_tmpAccountId,_tmpProviderThreadId,_tmpSubject,_tmpPreview,_tmpLastMessageAt,_tmpUnreadCount,_tmpArchived,_tmpSnoozedUntil,_tmpDeletedAt,_tmpMuted,_tmpNotificationImportance,_tmpCustomSoundUri);
           } else {
             _result = null;
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getForClub(final String clubId,
+      final Continuation<? super List<ThreadEntity>> $completion) {
+    final String _sql = "SELECT * FROM threads WHERE clubId = ?";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);
+    int _argIndex = 1;
+    _statement.bindString(_argIndex, clubId);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<ThreadEntity>>() {
+      @Override
+      @NonNull
+      public List<ThreadEntity> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfClubId = CursorUtil.getColumnIndexOrThrow(_cursor, "clubId");
+          final int _cursorIndexOfAccountId = CursorUtil.getColumnIndexOrThrow(_cursor, "accountId");
+          final int _cursorIndexOfProviderThreadId = CursorUtil.getColumnIndexOrThrow(_cursor, "providerThreadId");
+          final int _cursorIndexOfSubject = CursorUtil.getColumnIndexOrThrow(_cursor, "subject");
+          final int _cursorIndexOfPreview = CursorUtil.getColumnIndexOrThrow(_cursor, "preview");
+          final int _cursorIndexOfLastMessageAt = CursorUtil.getColumnIndexOrThrow(_cursor, "lastMessageAt");
+          final int _cursorIndexOfUnreadCount = CursorUtil.getColumnIndexOrThrow(_cursor, "unreadCount");
+          final int _cursorIndexOfArchived = CursorUtil.getColumnIndexOrThrow(_cursor, "archived");
+          final int _cursorIndexOfSnoozedUntil = CursorUtil.getColumnIndexOrThrow(_cursor, "snoozedUntil");
+          final int _cursorIndexOfDeletedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "deletedAt");
+          final int _cursorIndexOfMuted = CursorUtil.getColumnIndexOrThrow(_cursor, "muted");
+          final int _cursorIndexOfNotificationImportance = CursorUtil.getColumnIndexOrThrow(_cursor, "notificationImportance");
+          final int _cursorIndexOfCustomSoundUri = CursorUtil.getColumnIndexOrThrow(_cursor, "customSoundUri");
+          final List<ThreadEntity> _result = new ArrayList<ThreadEntity>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ThreadEntity _item;
+            final String _tmpId;
+            _tmpId = _cursor.getString(_cursorIndexOfId);
+            final String _tmpClubId;
+            _tmpClubId = _cursor.getString(_cursorIndexOfClubId);
+            final String _tmpAccountId;
+            _tmpAccountId = _cursor.getString(_cursorIndexOfAccountId);
+            final String _tmpProviderThreadId;
+            if (_cursor.isNull(_cursorIndexOfProviderThreadId)) {
+              _tmpProviderThreadId = null;
+            } else {
+              _tmpProviderThreadId = _cursor.getString(_cursorIndexOfProviderThreadId);
+            }
+            final String _tmpSubject;
+            _tmpSubject = _cursor.getString(_cursorIndexOfSubject);
+            final String _tmpPreview;
+            _tmpPreview = _cursor.getString(_cursorIndexOfPreview);
+            final long _tmpLastMessageAt;
+            _tmpLastMessageAt = _cursor.getLong(_cursorIndexOfLastMessageAt);
+            final int _tmpUnreadCount;
+            _tmpUnreadCount = _cursor.getInt(_cursorIndexOfUnreadCount);
+            final boolean _tmpArchived;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfArchived);
+            _tmpArchived = _tmp != 0;
+            final Long _tmpSnoozedUntil;
+            if (_cursor.isNull(_cursorIndexOfSnoozedUntil)) {
+              _tmpSnoozedUntil = null;
+            } else {
+              _tmpSnoozedUntil = _cursor.getLong(_cursorIndexOfSnoozedUntil);
+            }
+            final Long _tmpDeletedAt;
+            if (_cursor.isNull(_cursorIndexOfDeletedAt)) {
+              _tmpDeletedAt = null;
+            } else {
+              _tmpDeletedAt = _cursor.getLong(_cursorIndexOfDeletedAt);
+            }
+            final boolean _tmpMuted;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfMuted);
+            _tmpMuted = _tmp_1 != 0;
+            final Integer _tmpNotificationImportance;
+            if (_cursor.isNull(_cursorIndexOfNotificationImportance)) {
+              _tmpNotificationImportance = null;
+            } else {
+              _tmpNotificationImportance = _cursor.getInt(_cursorIndexOfNotificationImportance);
+            }
+            final String _tmpCustomSoundUri;
+            if (_cursor.isNull(_cursorIndexOfCustomSoundUri)) {
+              _tmpCustomSoundUri = null;
+            } else {
+              _tmpCustomSoundUri = _cursor.getString(_cursorIndexOfCustomSoundUri);
+            }
+            _item = new ThreadEntity(_tmpId,_tmpClubId,_tmpAccountId,_tmpProviderThreadId,_tmpSubject,_tmpPreview,_tmpLastMessageAt,_tmpUnreadCount,_tmpArchived,_tmpSnoozedUntil,_tmpDeletedAt,_tmpMuted,_tmpNotificationImportance,_tmpCustomSoundUri);
+            _result.add(_item);
+          }
+          return _result;
+        } finally {
+          _cursor.close();
+          _statement.release();
+        }
+      }
+    }, $completion);
+  }
+
+  @Override
+  public Object getAll(final Continuation<? super List<ThreadEntity>> $completion) {
+    final String _sql = "SELECT * FROM threads";
+    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);
+    final CancellationSignal _cancellationSignal = DBUtil.createCancellationSignal();
+    return CoroutinesRoom.execute(__db, false, _cancellationSignal, new Callable<List<ThreadEntity>>() {
+      @Override
+      @NonNull
+      public List<ThreadEntity> call() throws Exception {
+        final Cursor _cursor = DBUtil.query(__db, _statement, false, null);
+        try {
+          final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, "id");
+          final int _cursorIndexOfClubId = CursorUtil.getColumnIndexOrThrow(_cursor, "clubId");
+          final int _cursorIndexOfAccountId = CursorUtil.getColumnIndexOrThrow(_cursor, "accountId");
+          final int _cursorIndexOfProviderThreadId = CursorUtil.getColumnIndexOrThrow(_cursor, "providerThreadId");
+          final int _cursorIndexOfSubject = CursorUtil.getColumnIndexOrThrow(_cursor, "subject");
+          final int _cursorIndexOfPreview = CursorUtil.getColumnIndexOrThrow(_cursor, "preview");
+          final int _cursorIndexOfLastMessageAt = CursorUtil.getColumnIndexOrThrow(_cursor, "lastMessageAt");
+          final int _cursorIndexOfUnreadCount = CursorUtil.getColumnIndexOrThrow(_cursor, "unreadCount");
+          final int _cursorIndexOfArchived = CursorUtil.getColumnIndexOrThrow(_cursor, "archived");
+          final int _cursorIndexOfSnoozedUntil = CursorUtil.getColumnIndexOrThrow(_cursor, "snoozedUntil");
+          final int _cursorIndexOfDeletedAt = CursorUtil.getColumnIndexOrThrow(_cursor, "deletedAt");
+          final int _cursorIndexOfMuted = CursorUtil.getColumnIndexOrThrow(_cursor, "muted");
+          final int _cursorIndexOfNotificationImportance = CursorUtil.getColumnIndexOrThrow(_cursor, "notificationImportance");
+          final int _cursorIndexOfCustomSoundUri = CursorUtil.getColumnIndexOrThrow(_cursor, "customSoundUri");
+          final List<ThreadEntity> _result = new ArrayList<ThreadEntity>(_cursor.getCount());
+          while (_cursor.moveToNext()) {
+            final ThreadEntity _item;
+            final String _tmpId;
+            _tmpId = _cursor.getString(_cursorIndexOfId);
+            final String _tmpClubId;
+            _tmpClubId = _cursor.getString(_cursorIndexOfClubId);
+            final String _tmpAccountId;
+            _tmpAccountId = _cursor.getString(_cursorIndexOfAccountId);
+            final String _tmpProviderThreadId;
+            if (_cursor.isNull(_cursorIndexOfProviderThreadId)) {
+              _tmpProviderThreadId = null;
+            } else {
+              _tmpProviderThreadId = _cursor.getString(_cursorIndexOfProviderThreadId);
+            }
+            final String _tmpSubject;
+            _tmpSubject = _cursor.getString(_cursorIndexOfSubject);
+            final String _tmpPreview;
+            _tmpPreview = _cursor.getString(_cursorIndexOfPreview);
+            final long _tmpLastMessageAt;
+            _tmpLastMessageAt = _cursor.getLong(_cursorIndexOfLastMessageAt);
+            final int _tmpUnreadCount;
+            _tmpUnreadCount = _cursor.getInt(_cursorIndexOfUnreadCount);
+            final boolean _tmpArchived;
+            final int _tmp;
+            _tmp = _cursor.getInt(_cursorIndexOfArchived);
+            _tmpArchived = _tmp != 0;
+            final Long _tmpSnoozedUntil;
+            if (_cursor.isNull(_cursorIndexOfSnoozedUntil)) {
+              _tmpSnoozedUntil = null;
+            } else {
+              _tmpSnoozedUntil = _cursor.getLong(_cursorIndexOfSnoozedUntil);
+            }
+            final Long _tmpDeletedAt;
+            if (_cursor.isNull(_cursorIndexOfDeletedAt)) {
+              _tmpDeletedAt = null;
+            } else {
+              _tmpDeletedAt = _cursor.getLong(_cursorIndexOfDeletedAt);
+            }
+            final boolean _tmpMuted;
+            final int _tmp_1;
+            _tmp_1 = _cursor.getInt(_cursorIndexOfMuted);
+            _tmpMuted = _tmp_1 != 0;
+            final Integer _tmpNotificationImportance;
+            if (_cursor.isNull(_cursorIndexOfNotificationImportance)) {
+              _tmpNotificationImportance = null;
+            } else {
+              _tmpNotificationImportance = _cursor.getInt(_cursorIndexOfNotificationImportance);
+            }
+            final String _tmpCustomSoundUri;
+            if (_cursor.isNull(_cursorIndexOfCustomSoundUri)) {
+              _tmpCustomSoundUri = null;
+            } else {
+              _tmpCustomSoundUri = _cursor.getString(_cursorIndexOfCustomSoundUri);
+            }
+            _item = new ThreadEntity(_tmpId,_tmpClubId,_tmpAccountId,_tmpProviderThreadId,_tmpSubject,_tmpPreview,_tmpLastMessageAt,_tmpUnreadCount,_tmpArchived,_tmpSnoozedUntil,_tmpDeletedAt,_tmpMuted,_tmpNotificationImportance,_tmpCustomSoundUri);
+            _result.add(_item);
           }
           return _result;
         } finally {

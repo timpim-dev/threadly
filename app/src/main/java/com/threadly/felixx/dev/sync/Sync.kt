@@ -26,19 +26,29 @@ class MailSyncWorker(context: Context, params: WorkerParameters) : CoroutineWork
 }
 
 class SyncCoordinator(private val app: ThreadlyApplication) {
+    companion object { private const val TAG = "ThreadlySync" }
+
     suspend fun syncAll() {
         val accounts = app.repository.accounts.first()
-        accounts.filter { it.enabled }.forEach { account -> runCatching { syncAccount(account.id) } }
+        android.util.Log.d(TAG, "syncAll: ${accounts.size} accounts")
+        accounts.filter { it.enabled }.forEach { account ->
+            runCatching { syncAccount(account.id) }
+                .onFailure { android.util.Log.e(TAG, "syncAccount failed for ${account.email}", it) }
+        }
     }
 
     suspend fun syncAccount(accountId: String) {
         val account = app.database.accounts().get(accountId) ?: return
+        android.util.Log.d(TAG, "syncAccount start: ${account.email} provider=${account.provider}")
         val state = app.database.syncStates().get(accountId)
+        android.util.Log.d(TAG, "syncAccount cursor: ${state?.lastCursor}")
         val page = app.providerRegistry.forAccount(account).receive(account, state?.lastCursor)
+        android.util.Log.d(TAG, "syncAccount received: ${page.messages.size} messages")
         val matcher = com.threadly.felixx.dev.mail.ClubMatcher(app.database.clubs())
         page.messages.forEach { app.repository.ingest(account, it, matcher) }
         app.database.syncStates().save(com.threadly.felixx.dev.data.SyncStateEntity(accountId, page.cursor, System.currentTimeMillis(), null))
         app.database.accounts().updateStatus(accountId, com.threadly.felixx.dev.data.AccountStatus.CONNECTED, null)
+        android.util.Log.d(TAG, "syncAccount done: ${account.email}")
     }
 }
 
