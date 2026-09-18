@@ -25,6 +25,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"${localProperties.getProperty("google_server_client_id", "")}\"")
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.threadly.felixx.dev"
     }
 
     buildTypes {
@@ -66,10 +67,8 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.security.crypto)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services)
-    implementation(libs.play.services.auth)
     implementation(libs.kotlinx.coroutines)
+    implementation("net.openid:appauth:0.11.1")
     implementation(libs.angus.mail)
     ksp(libs.androidx.room.compiler)
     testImplementation(libs.junit)

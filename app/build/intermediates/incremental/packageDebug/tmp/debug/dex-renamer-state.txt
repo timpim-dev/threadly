@@ -1,4 +1,4 @@
-#Fri Sep 18 23:18:32 CEST 2026
+#Sat Sep 19 00:22:29 CEST 2026
 base.0=/Users/lilly/Codes/Threadly/app/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
 base.1=/Users/lilly/Codes/Threadly/app/build/intermediates/dex/debug/mergeProjectDexDebug/0/classes.dex
 base.2=/Users/lilly/Codes/Threadly/app/build/intermediates/dex/debug/mergeProjectDexDebug/12/classes.dex

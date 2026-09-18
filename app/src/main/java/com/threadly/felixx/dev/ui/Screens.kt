@@ -35,68 +35,124 @@ import java.util.Locale
 }
 
 @Composable
-fun HomeScreen(onClub: (String) -> Unit, onProfile: () -> Unit, onCompose: () -> Unit, onManageClub: (String) -> Unit) {
+fun HomeScreen(onThread: (String) -> Unit, onProfile: () -> Unit, onCompose: () -> Unit, onManageClub: (String) -> Unit) {
     val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as ThreadlyApplication
     val clubs by app.repository.clubs.collectAsState(emptyList())
     val accounts by app.repository.accounts.collectAsState(emptyList())
     val isSyncing by app.isSyncing.collectAsState()
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Threadly", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onProfile) { Icon(Icons.Default.AccountCircle, "Profile") } },
-                actions = {
-                    IconButton(onClick = { onManageClub("new") }) { Icon(Icons.Default.Add, "New club") }
-                    IconButton(onClick = { app.triggerSync() }, enabled = !isSyncing) {
-                        if (isSyncing) {
-                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        } else {
-                            Icon(Icons.Default.Refresh, "Refresh")
+    
+    var selectedClubId by remember { mutableStateOf("unsorted") }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(Modifier.height(16.dp))
+                Text("Threadly", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                Spacer(Modifier.height(8.dp))
+                
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    item {
+                        NavigationDrawerItem(
+                            label = { Text("Unsorted Mail") },
+                            selected = selectedClubId == "unsorted",
+                            onClick = { selectedClubId = "unsorted"; scope.launch { drawerState.close() } },
+                            icon = { Icon(Icons.Default.Inbox, "Unsorted") },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                    items(clubs.filter { it.id != "unsorted" }, key = { it.id }) { club ->
+                        NavigationDrawerItem(
+                            label = { Text(club.name) },
+                            selected = selectedClubId == club.id,
+                            onClick = { selectedClubId = club.id; scope.launch { drawerState.close() } },
+                            icon = { Avatar(club.name, club.avatarColor, size = 24.dp) },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                    item {
+                        Spacer(Modifier.height(8.dp))
+                        NavigationDrawerItem(
+                            label = { Text("Add Club") },
+                            selected = false,
+                            onClick = { scope.launch { drawerState.close() }; onManageClub("new") },
+                            icon = { Icon(Icons.Default.Add, "Add") },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                }
+                
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                Spacer(Modifier.height(8.dp))
+                NavigationDrawerItem(
+                    label = { Text("Profile & Settings") },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() }; onProfile() },
+                    icon = { Icon(Icons.Default.AccountCircle, "Profile") },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    ) {
+        val selectedClub by app.repository.club(selectedClubId).collectAsState(null)
+        val threads by app.repository.threads(selectedClubId).collectAsState(emptyList())
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(selectedClub?.name ?: if (selectedClubId == "unsorted") "Unsorted Mail" else "Club", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, "Menu")
+                        }
+                    },
+                    actions = {
+                        if (selectedClubId != "unsorted") {
+                            IconButton(onClick = { onManageClub(selectedClubId) }) { Icon(Icons.Default.Settings, "Manage") }
+                        }
+                        IconButton(onClick = { app.triggerSync() }, enabled = !isSyncing) {
+                            if (isSyncing) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Default.Refresh, "Refresh")
+                            }
+                        }
+                    }
+                )
+            },
+            floatingActionButton = { FloatingActionButton(onClick = onCompose) { Icon(Icons.Default.Edit, "New thread") } }
+        ) { padding ->
+            LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (accounts.isEmpty()) {
+                    item {
+                        Card(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                            Column(Modifier.padding(16.dp)) {
+                                Text("No account connected", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer)
+                                Text("Open the side menu and go to Profile to add an account.", color = MaterialTheme.colorScheme.onErrorContainer)
+                            }
                         }
                     }
                 }
-            )
-        },
-        floatingActionButton = { FloatingActionButton(onClick = onCompose) { Icon(Icons.Default.Edit, "New thread") } }
-    ) { padding ->
-        LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (accounts.isEmpty()) {
-                item {
-                    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text("No account connected", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer)
-                            Text("Tap Profile → Add Account to start syncing mail.", color = MaterialTheme.colorScheme.onErrorContainer)
-                            Spacer(Modifier.height(8.dp))
-                            Button(onClick = onProfile) { Text("Go to Profile") }
-                        }
-                    }
+                
+                items(threads, key = { it.id }) { thread -> ThreadRow(thread) { onThread(thread.id) } }
+                
+                if (threads.isEmpty() && accounts.isNotEmpty()) {
+                    item { EmptyState("No conversations", "New messages will appear here.") }
                 }
             }
-            item { Text("Your clubs", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Spacer(Modifier.height(4.dp)) }
-            items(clubs, key = { it.id }) { club -> ClubRow(club, onClick = { onClub(club.id) }) }
-            if (clubs.isEmpty() && accounts.isNotEmpty()) item { EmptyState("No clubs yet", "Add an account and club to start organizing mail.") }
         }
     }
 }
 
-@Composable private fun ClubRow(club: ClubEntity, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).clickable(onClick = onClick).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-        Avatar(club.name, club.avatarColor)
-        Spacer(Modifier.width(14.dp)); Column(Modifier.weight(1f)) { Text(club.name, fontWeight = FontWeight.SemiBold); Text(if (club.isUnsorted) "Mail without a club" else "Tap to see conversations", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-        Icon(Icons.Default.ChevronRight, "Open")
-    }
-}
-
-@Composable private fun Avatar(label: String, color: Long) { Box(Modifier.size(52.dp).clip(CircleShape).background(Color(color)), contentAlignment = Alignment.Center) { Text(label.take(2).uppercase(), color = Color.White, fontWeight = FontWeight.Bold) } }
-
-@Composable
-fun ClubScreen(id: String, onBack: () -> Unit, onThread: (String) -> Unit, onManage: () -> Unit) {
-    val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as ThreadlyApplication
-    val club by app.repository.club(id).collectAsState(null)
-    val threads by app.repository.threads(id).collectAsState(emptyList())
-    Shell(club?.name ?: "Club", onBack, action = { if (id != "unsorted") IconButton(onClick = onManage) { Icon(Icons.Default.Settings, "Manage") } }) {
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(threads, key = { it.id }) { thread -> ThreadRow(thread) { onThread(thread.id) } }; if (threads.isEmpty()) item { EmptyState("No conversations", "New messages for this club will appear here.") } }
-    }
+@Composable private fun Avatar(label: String, color: Long, size: androidx.compose.ui.unit.Dp = 52.dp) { 
+    val textSize = if (size < 40.dp) MaterialTheme.typography.labelSmall.fontSize else MaterialTheme.typography.bodyLarge.fontSize
+    Box(Modifier.size(size).clip(CircleShape).background(Color(color)), contentAlignment = Alignment.Center) { 
+        Text(label.take(2).uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = textSize) 
+    } 
 }
 
 @Composable private fun ThreadRow(thread: ThreadEntity, onClick: () -> Unit) { Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(14.dp), verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text(thread.subject.ifBlank { "(No subject)" }, fontWeight = if (thread.unreadCount > 0) FontWeight.Bold else FontWeight.Normal); Text(thread.preview, maxLines = 2, color = MaterialTheme.colorScheme.onSurfaceVariant) }; if (thread.unreadCount > 0) Badge { Text(thread.unreadCount.toString()) } } }

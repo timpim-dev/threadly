@@ -4,7 +4,12 @@ import android.content.Context
 import com.threadly.felixx.dev.data.AccountEntity
 import com.threadly.felixx.dev.data.MailTypes
 import com.threadly.felixx.dev.security.SecretsStore
-import com.google.android.gms.auth.GoogleAuthUtil
+import net.openid.appauth.*
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import android.net.Uri
+import com.threadly.felixx.dev.BuildConfig
 import jakarta.mail.Folder
 import jakarta.mail.Message
 import jakarta.mail.Session
@@ -17,12 +22,34 @@ import java.util.Properties
 class GmailProvider(private val context: Context) : MailProvider {
     companion object { private const val TAG = "GmailProvider" }
 
-    private fun getToken(account: AccountEntity): String {
-        android.util.Log.d(TAG, "getToken: ${account.email}")
-        val androidAccount = android.accounts.Account(account.email, "com.google")
-        val token = GoogleAuthUtil.getToken(context, androidAccount, "oauth2:https://mail.google.com/")
-        android.util.Log.d(TAG, "getToken: OK len=${token.length}")
-        return token
+    private suspend fun getToken(account: AccountEntity): String = suspendCancellableCoroutine { continuation ->
+        val refreshToken = account.refreshToken
+        if (refreshToken.isNullOrEmpty()) {
+            continuation.resumeWithException(Exception("No refresh token available"))
+            return@suspendCancellableCoroutine
+        }
+
+        val serviceConfig = AuthorizationServiceConfiguration(
+            Uri.parse("https://accounts.google.com/o/oauth2/v2/auth"),
+            Uri.parse("https://oauth2.googleapis.com/token")
+        )
+
+        val tokenRequest = TokenRequest.Builder(
+            serviceConfig,
+            BuildConfig.GOOGLE_SERVER_CLIENT_ID
+        )
+        .setGrantType(GrantTypeValues.REFRESH_TOKEN)
+        .setRefreshToken(refreshToken)
+        .build()
+
+        val authService = AuthorizationService(context)
+        authService.performTokenRequest(tokenRequest) { response, ex ->
+            if (response != null && response.accessToken != null) {
+                continuation.resume(response.accessToken!!)
+            } else {
+                continuation.resumeWithException(ex ?: Exception("Token refresh failed"))
+            }
+        }
     }
 
     override suspend fun receive(account: AccountEntity, cursor: String?): ProviderPage = withContext(Dispatchers.IO) {

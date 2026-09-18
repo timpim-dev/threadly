@@ -42,10 +42,10 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(4) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(5) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `displayName` TEXT NOT NULL, `email` TEXT NOT NULL, `provider` TEXT NOT NULL, `imapHost` TEXT, `smtpHost` TEXT, `status` TEXT NOT NULL, `enabled` INTEGER NOT NULL, `lastSyncAt` INTEGER, `errorMessage` TEXT, PRIMARY KEY(`id`))");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `displayName` TEXT NOT NULL, `email` TEXT NOT NULL, `provider` TEXT NOT NULL, `imapHost` TEXT, `smtpHost` TEXT, `refreshToken` TEXT, `status` TEXT NOT NULL, `enabled` INTEGER NOT NULL, `lastSyncAt` INTEGER, `errorMessage` TEXT, PRIMARY KEY(`id`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `clubs` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `avatarUri` TEXT, `avatarColor` INTEGER NOT NULL, `isUnsorted` INTEGER NOT NULL, `matchMode` TEXT NOT NULL, `deletedAt` INTEGER, PRIMARY KEY(`id`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `club_accounts` (`clubId` TEXT NOT NULL, `accountId` TEXT NOT NULL, PRIMARY KEY(`clubId`, `accountId`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `club_keywords` (`clubId` TEXT NOT NULL, `keyword` TEXT NOT NULL, PRIMARY KEY(`clubId`, `keyword`))");
@@ -62,7 +62,7 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
         db.execSQL("CREATE TABLE IF NOT EXISTS `app_settings` (`id` INTEGER NOT NULL, `fasterSync` INTEGER NOT NULL, `fasterSyncMinutes` INTEGER NOT NULL, `swipeActionLeft` TEXT NOT NULL, `swipeActionRight` TEXT NOT NULL, `notificationsEnabled` INTEGER NOT NULL, `notificationImportance` INTEGER NOT NULL, `notificationSoundUri` TEXT, `vibrationEnabled` INTEGER NOT NULL, `theme` TEXT NOT NULL, `dynamicColors` INTEGER NOT NULL, `seedColor` INTEGER NOT NULL, `fontFamily` TEXT NOT NULL, `messageCornerRadius` INTEGER NOT NULL, `compactLayout` INTEGER NOT NULL, `enterToSend` INTEGER NOT NULL, `showAvatarsInThread` INTEGER NOT NULL, `openRouterApiKey` TEXT, `openRouterModel` TEXT NOT NULL, PRIMARY KEY(`id`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `sync_states` (`accountId` TEXT NOT NULL, `lastCursor` TEXT, `lastSuccessAt` INTEGER, `lastError` TEXT, PRIMARY KEY(`accountId`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '79768be3da25614b7a6ea1d318595a54')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2b2e25bbba37c2b4397a863c89930725')");
       }
 
       @Override
@@ -120,13 +120,14 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
       @NonNull
       public RoomOpenHelper.ValidationResult onValidateSchema(
           @NonNull final SupportSQLiteDatabase db) {
-        final HashMap<String, TableInfo.Column> _columnsAccounts = new HashMap<String, TableInfo.Column>(10);
+        final HashMap<String, TableInfo.Column> _columnsAccounts = new HashMap<String, TableInfo.Column>(11);
         _columnsAccounts.put("id", new TableInfo.Column("id", "TEXT", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("displayName", new TableInfo.Column("displayName", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("email", new TableInfo.Column("email", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("provider", new TableInfo.Column("provider", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("imapHost", new TableInfo.Column("imapHost", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("smtpHost", new TableInfo.Column("smtpHost", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsAccounts.put("refreshToken", new TableInfo.Column("refreshToken", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("status", new TableInfo.Column("status", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("enabled", new TableInfo.Column("enabled", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAccounts.put("lastSyncAt", new TableInfo.Column("lastSyncAt", "INTEGER", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -307,7 +308,7 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "79768be3da25614b7a6ea1d318595a54", "a0518edd7255ccf11a9f724914c48b61");
+    }, "2b2e25bbba37c2b4397a863c89930725", "cc4bb25d00f012124a743af869d40343");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;

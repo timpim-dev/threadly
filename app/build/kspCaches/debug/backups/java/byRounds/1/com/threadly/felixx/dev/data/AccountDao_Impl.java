@@ -48,7 +48,7 @@ public final class AccountDao_Impl implements AccountDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `accounts` (`id`,`displayName`,`email`,`provider`,`imapHost`,`smtpHost`,`status`,`enabled`,`lastSyncAt`,`errorMessage`) VALUES (?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `accounts` (`id`,`displayName`,`email`,`provider`,`imapHost`,`smtpHost`,`refreshToken`,`status`,`enabled`,`lastSyncAt`,`errorMessage`) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -68,19 +68,24 @@ public final class AccountDao_Impl implements AccountDao {
         } else {
           statement.bindString(6, entity.getSmtpHost());
         }
-        final String _tmp = __roomConverters.status(entity.getStatus());
-        statement.bindString(7, _tmp);
-        final int _tmp_1 = entity.getEnabled() ? 1 : 0;
-        statement.bindLong(8, _tmp_1);
-        if (entity.getLastSyncAt() == null) {
-          statement.bindNull(9);
+        if (entity.getRefreshToken() == null) {
+          statement.bindNull(7);
         } else {
-          statement.bindLong(9, entity.getLastSyncAt());
+          statement.bindString(7, entity.getRefreshToken());
         }
-        if (entity.getErrorMessage() == null) {
+        final String _tmp = __roomConverters.status(entity.getStatus());
+        statement.bindString(8, _tmp);
+        final int _tmp_1 = entity.getEnabled() ? 1 : 0;
+        statement.bindLong(9, _tmp_1);
+        if (entity.getLastSyncAt() == null) {
           statement.bindNull(10);
         } else {
-          statement.bindString(10, entity.getErrorMessage());
+          statement.bindLong(10, entity.getLastSyncAt());
+        }
+        if (entity.getErrorMessage() == null) {
+          statement.bindNull(11);
+        } else {
+          statement.bindString(11, entity.getErrorMessage());
         }
       }
     };
@@ -194,6 +199,7 @@ public final class AccountDao_Impl implements AccountDao {
           final int _cursorIndexOfProvider = CursorUtil.getColumnIndexOrThrow(_cursor, "provider");
           final int _cursorIndexOfImapHost = CursorUtil.getColumnIndexOrThrow(_cursor, "imapHost");
           final int _cursorIndexOfSmtpHost = CursorUtil.getColumnIndexOrThrow(_cursor, "smtpHost");
+          final int _cursorIndexOfRefreshToken = CursorUtil.getColumnIndexOrThrow(_cursor, "refreshToken");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfEnabled = CursorUtil.getColumnIndexOrThrow(_cursor, "enabled");
           final int _cursorIndexOfLastSyncAt = CursorUtil.getColumnIndexOrThrow(_cursor, "lastSyncAt");
@@ -221,6 +227,12 @@ public final class AccountDao_Impl implements AccountDao {
             } else {
               _tmpSmtpHost = _cursor.getString(_cursorIndexOfSmtpHost);
             }
+            final String _tmpRefreshToken;
+            if (_cursor.isNull(_cursorIndexOfRefreshToken)) {
+              _tmpRefreshToken = null;
+            } else {
+              _tmpRefreshToken = _cursor.getString(_cursorIndexOfRefreshToken);
+            }
             final AccountStatus _tmpStatus;
             final String _tmp;
             _tmp = _cursor.getString(_cursorIndexOfStatus);
@@ -241,7 +253,7 @@ public final class AccountDao_Impl implements AccountDao {
             } else {
               _tmpErrorMessage = _cursor.getString(_cursorIndexOfErrorMessage);
             }
-            _item = new AccountEntity(_tmpId,_tmpDisplayName,_tmpEmail,_tmpProvider,_tmpImapHost,_tmpSmtpHost,_tmpStatus,_tmpEnabled,_tmpLastSyncAt,_tmpErrorMessage);
+            _item = new AccountEntity(_tmpId,_tmpDisplayName,_tmpEmail,_tmpProvider,_tmpImapHost,_tmpSmtpHost,_tmpRefreshToken,_tmpStatus,_tmpEnabled,_tmpLastSyncAt,_tmpErrorMessage);
             _result.add(_item);
           }
           return _result;
@@ -276,6 +288,7 @@ public final class AccountDao_Impl implements AccountDao {
           final int _cursorIndexOfProvider = CursorUtil.getColumnIndexOrThrow(_cursor, "provider");
           final int _cursorIndexOfImapHost = CursorUtil.getColumnIndexOrThrow(_cursor, "imapHost");
           final int _cursorIndexOfSmtpHost = CursorUtil.getColumnIndexOrThrow(_cursor, "smtpHost");
+          final int _cursorIndexOfRefreshToken = CursorUtil.getColumnIndexOrThrow(_cursor, "refreshToken");
           final int _cursorIndexOfStatus = CursorUtil.getColumnIndexOrThrow(_cursor, "status");
           final int _cursorIndexOfEnabled = CursorUtil.getColumnIndexOrThrow(_cursor, "enabled");
           final int _cursorIndexOfLastSyncAt = CursorUtil.getColumnIndexOrThrow(_cursor, "lastSyncAt");
@@ -302,6 +315,12 @@ public final class AccountDao_Impl implements AccountDao {
             } else {
               _tmpSmtpHost = _cursor.getString(_cursorIndexOfSmtpHost);
             }
+            final String _tmpRefreshToken;
+            if (_cursor.isNull(_cursorIndexOfRefreshToken)) {
+              _tmpRefreshToken = null;
+            } else {
+              _tmpRefreshToken = _cursor.getString(_cursorIndexOfRefreshToken);
+            }
             final AccountStatus _tmpStatus;
             final String _tmp;
             _tmp = _cursor.getString(_cursorIndexOfStatus);
@@ -322,7 +341,7 @@ public final class AccountDao_Impl implements AccountDao {
             } else {
               _tmpErrorMessage = _cursor.getString(_cursorIndexOfErrorMessage);
             }
-            _result = new AccountEntity(_tmpId,_tmpDisplayName,_tmpEmail,_tmpProvider,_tmpImapHost,_tmpSmtpHost,_tmpStatus,_tmpEnabled,_tmpLastSyncAt,_tmpErrorMessage);
+            _result = new AccountEntity(_tmpId,_tmpDisplayName,_tmpEmail,_tmpProvider,_tmpImapHost,_tmpSmtpHost,_tmpRefreshToken,_tmpStatus,_tmpEnabled,_tmpLastSyncAt,_tmpErrorMessage);
           } else {
             _result = null;
           }

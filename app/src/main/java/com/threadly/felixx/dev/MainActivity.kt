@@ -38,11 +38,7 @@ fun ThreadlyApp() {
         popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }, animationSpec = tween(300)) },
         popExitTransition = { slideOutHorizontally(targetOffsetX = { it }, animationSpec = tween(300)) }
     ) {
-        composable("home") { HomeScreen(onClub = { nav.navigate("club/$it") }, onProfile = { nav.navigate("profile") }, onCompose = { nav.navigate("compose") }, onManageClub = { nav.navigate("manageClub/$it") }) }
-        composable("club/{id}") { entry -> 
-            val id = entry.arguments?.getString("id") ?: "unsorted"
-            ClubScreen(id, onBack = { nav.popBackStack() }, onThread = { nav.navigate("thread/$it") }, onManage = { nav.navigate("manageClub/$id") }) 
-        }
+        composable("home") { HomeScreen(onThread = { nav.navigate("thread/$it") }, onProfile = { nav.navigate("profile") }, onCompose = { nav.navigate("compose") }, onManageClub = { nav.navigate("manageClub/$it") }) }
         composable("thread/{id}") { entry -> ThreadScreen(entry.arguments?.getString("id") ?: "", onBack = { nav.popBackStack() }) }
         composable("compose") { ComposeScreen(onBack = { nav.popBackStack() }) }
         composable("profile") { ProfileScreen(onBack = { nav.popBackStack() }, onSettings = { nav.navigate("settings") }, onAddAccount = { nav.navigate("addAccount") }) }

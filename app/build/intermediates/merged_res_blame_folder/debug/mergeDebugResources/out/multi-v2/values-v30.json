@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.threadly.felixx.dev.app-mergeDebugResources-68:/values-v30/values-v30.xml",
+            "outputFile": "com.threadly.felixx.dev.app-mergeDebugResources-67:/values-v30/values-v30.xml",
             "map": [
                 {
                     "source": "/Users/lilly/.gradle/caches/9.7.1/transforms/738534bf6d1d8dddd29456bd584dbec1/transformed/material3-release/res/values-v30/values-v30.xml",

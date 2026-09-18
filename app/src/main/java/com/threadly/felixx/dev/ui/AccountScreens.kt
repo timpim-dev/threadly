@@ -10,10 +10,20 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.Scope
-import com.google.android.gms.common.api.ApiException
+import android.net.Uri
+import android.util.Base64
+import org.json.JSONObject
+import net.openid.appauth.AuthorizationService
+import net.openid.appauth.AuthorizationServiceConfiguration
+import net.openid.appauth.AuthorizationRequest
+import net.openid.appauth.ResponseTypeValues
+import net.openid.appauth.AuthorizationResponse
+import net.openid.appauth.AuthorizationException
+import net.openid.appauth.TokenResponse
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import com.threadly.felixx.dev.BuildConfig
 import com.threadly.felixx.dev.ThreadlyApplication
 import com.threadly.felixx.dev.data.AccountEntity
 import com.threadly.felixx.dev.data.MailTypes
@@ -21,6 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProviderSelectionScreen(
@@ -35,31 +46,68 @@ fun ProviderSelectionScreen(
     var isLoading by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            val email = account?.email
-            if (email != null) {
+        val data = result.data
+        if (data != null) {
+            val resp = AuthorizationResponse.fromIntent(data)
+            val ex = AuthorizationException.fromIntent(data)
+
+            if (resp != null) {
                 isLoading = true
-                scope.launch {
-                    val entity = AccountEntity(
-                        id = UUID.randomUUID().toString(),
-                        email = email,
-                        provider = MailTypes.GMAIL,
-                        imapHost = "",
-                        smtpHost = ""
-                    )
-                    // Save immediately — no blocking connection test
-                    app.repository.saveAccount(entity)
-                    // Kick off a background sync
-                    app.triggerSync()
-                    onAccountAdded()
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        val authService = AuthorizationService(context)
+                        val tokenResponse = suspendCancellableCoroutine<TokenResponse> { continuation ->
+                            authService.performTokenRequest(resp.createTokenExchangeRequest()) { response, exception ->
+                                if (response != null) {
+                                    continuation.resume(response)
+                                } else {
+                                    continuation.resumeWithException(exception ?: Exception("Unknown token error"))
+                                }
+                            }
+                        }
+
+                        val idToken = tokenResponse.idToken
+                        var email: String? = null
+                        if (idToken != null) {
+                            val parts = idToken.split(".")
+                            if (parts.size == 3) {
+                                val payload = String(Base64.decode(parts[1], Base64.URL_SAFE))
+                                email = JSONObject(payload).optString("email")
+                            }
+                        }
+
+                        if (!email.isNullOrEmpty()) {
+                            val entity = AccountEntity(
+                                id = UUID.randomUUID().toString(),
+                                email = email,
+                                provider = MailTypes.GMAIL,
+                                imapHost = "",
+                                smtpHost = "",
+                                refreshToken = tokenResponse.refreshToken
+                            )
+                            // Save immediately — no blocking connection test
+                            app.repository.saveAccount(entity)
+                            // Kick off a background sync
+                            app.triggerSync()
+                            withContext(Dispatchers.Main) {
+                                onAccountAdded()
+                            }
+                        } else {
+                            withContext(Dispatchers.Main) {
+                                error = "Failed to extract email from Google Sign In"
+                                isLoading = false
+                            }
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            error = "Token exchange failed: ${e.message}"
+                            isLoading = false
+                        }
+                    }
                 }
             } else {
-                error = "Failed to get email from Google Sign In"
+                error = ex?.message ?: "Google Sign In cancelled"
             }
-        } catch (e: ApiException) {
-            error = "Google Sign In failed: ${e.statusCode}"
         }
     }
 
@@ -82,12 +130,24 @@ fun ProviderSelectionScreen(
         ) {
             Button(
                 onClick = {
-                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestEmail()
-                        .requestScopes(Scope("https://mail.google.com/"))
-                        .build()
-                    val client = GoogleSignIn.getClient(context, gso)
-                    launcher.launch(client.signInIntent)
+                    val serviceConfig = AuthorizationServiceConfiguration(
+                        Uri.parse("https://accounts.google.com/o/oauth2/v2/auth"),
+                        Uri.parse("https://oauth2.googleapis.com/token")
+                    )
+
+                    val clientId = BuildConfig.GOOGLE_SERVER_CLIENT_ID
+                    val redirectUri = Uri.parse("com.threadly.felixx.dev:/oauth2redirect")
+
+                    val authRequestBuilder = AuthorizationRequest.Builder(
+                        serviceConfig,
+                        clientId,
+                        ResponseTypeValues.CODE,
+                        redirectUri
+                    ).setScopes("email", "https://mail.google.com/")
+
+                    val authService = AuthorizationService(context)
+                    val authIntent = authService.getAuthorizationRequestIntent(authRequestBuilder.build())
+                    launcher.launch(authIntent)
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading

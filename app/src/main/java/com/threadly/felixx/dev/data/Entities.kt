@@ -23,6 +23,7 @@ data class AccountEntity(
     val provider: String,
     val imapHost: String? = null,
     val smtpHost: String? = null,
+    val refreshToken: String? = null,
     val status: AccountStatus = AccountStatus.DISCONNECTED,
     val enabled: Boolean = true,
     val lastSyncAt: Long? = null,
