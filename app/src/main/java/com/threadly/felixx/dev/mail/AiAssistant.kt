@@ -12,7 +12,7 @@ import java.io.InputStreamReader
 object AiAssistant {
     private const val API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-    suspend fun sendPrompt(apiKey: String, systemPrompt: String, userPrompt: String): String = withContext(Dispatchers.IO) {
+    suspend fun sendPrompt(apiKey: String, model: String, systemPrompt: String, userPrompt: String): String = withContext(Dispatchers.IO) {
         val url = URL(API_URL)
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "POST"
@@ -34,7 +34,7 @@ object AiAssistant {
         }
 
         val jsonBody = JSONObject().apply {
-            put("model", "google/gemini-2.5-flash") // fast model
+            put("model", model)
             put("messages", messages)
         }
 

@@ -188,12 +188,13 @@ fun ThreadScreen(id: String, onBack: () -> Unit) {
 
         fun generate(systemPrompt: String, userPrompt: String, onDone: (String) -> Unit = {}) {
             val key = settings?.openRouterApiKey
+            val model = settings?.openRouterModel ?: "meta-llama/llama-3.3-70b-instruct:free"
             if (key.isNullOrBlank()) return
             isGenerating = true
             aiResponse = ""
             scope.launch {
                 try {
-                    val res = com.threadly.felixx.dev.mail.AiAssistant.sendPrompt(key, systemPrompt, userPrompt)
+                    val res = com.threadly.felixx.dev.mail.AiAssistant.sendPrompt(key, model, systemPrompt, userPrompt)
                     aiResponse = res
                     onDone(res)
                 } catch (e: Exception) {
@@ -431,6 +432,37 @@ fun ThreadScreen(id: String, onBack: () -> Unit) {
                         },
                         dismissButton = {
                             TextButton(onClick = { showKeyDialog = false }) { Text("Cancel") }
+                        }
+                    )
+                }
+                
+                var showModelDialog by remember { mutableStateOf(false) }
+                ListItem(
+                    headlineContent = { Text("OpenRouter Model") },
+                    supportingContent = { Text(settings?.openRouterModel ?: "meta-llama/llama-3.3-70b-instruct:free") },
+                    modifier = Modifier.clickable { showModelDialog = true }
+                )
+                if (showModelDialog) {
+                    var tempModel by remember { mutableStateOf(settings?.openRouterModel ?: "meta-llama/llama-3.3-70b-instruct:free") }
+                    AlertDialog(
+                        onDismissRequest = { showModelDialog = false },
+                        title = { Text("OpenRouter Model") },
+                        text = {
+                            OutlinedTextField(
+                                value = tempModel,
+                                onValueChange = { tempModel = it },
+                                label = { Text("Model ID") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                updateSettings { copy(openRouterModel = tempModel.trim()) }
+                                showModelDialog = false
+                            }) { Text("Save") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showModelDialog = false }) { Text("Cancel") }
                         }
                     )
                 }

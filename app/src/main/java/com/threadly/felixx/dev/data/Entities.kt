@@ -119,7 +119,8 @@ data class AppSettingsEntity(
     val compactLayout: Boolean = false,
     val enterToSend: Boolean = false,
     val showAvatarsInThread: Boolean = true,
-    val openRouterApiKey: String? = null
+    val openRouterApiKey: String? = null,
+    val openRouterModel: String = "meta-llama/llama-3.3-70b-instruct:free"
 )
 
 @Entity(tableName = "sync_states")

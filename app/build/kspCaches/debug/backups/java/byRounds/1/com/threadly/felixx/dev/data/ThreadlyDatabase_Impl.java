@@ -42,7 +42,7 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
   @Override
   @NonNull
   protected SupportSQLiteOpenHelper createOpenHelper(@NonNull final DatabaseConfiguration config) {
-    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(3) {
+    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(config, new RoomOpenHelper.Delegate(4) {
       @Override
       public void createAllTables(@NonNull final SupportSQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `displayName` TEXT NOT NULL, `email` TEXT NOT NULL, `provider` TEXT NOT NULL, `imapHost` TEXT, `smtpHost` TEXT, `status` TEXT NOT NULL, `enabled` INTEGER NOT NULL, `lastSyncAt` INTEGER, `errorMessage` TEXT, PRIMARY KEY(`id`))");
@@ -59,10 +59,10 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_messages_providerMessageId` ON `messages` (`providerMessageId`)");
         db.execSQL("CREATE TABLE IF NOT EXISTS `attachments` (`id` TEXT NOT NULL, `messageId` TEXT NOT NULL, `fileName` TEXT NOT NULL, `mimeType` TEXT NOT NULL, `sizeBytes` INTEGER NOT NULL, `localUri` TEXT, `providerPartId` TEXT, PRIMARY KEY(`id`))");
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_attachments_messageId` ON `attachments` (`messageId`)");
-        db.execSQL("CREATE TABLE IF NOT EXISTS `app_settings` (`id` INTEGER NOT NULL, `fasterSync` INTEGER NOT NULL, `fasterSyncMinutes` INTEGER NOT NULL, `swipeActionLeft` TEXT NOT NULL, `swipeActionRight` TEXT NOT NULL, `notificationsEnabled` INTEGER NOT NULL, `notificationImportance` INTEGER NOT NULL, `notificationSoundUri` TEXT, `vibrationEnabled` INTEGER NOT NULL, `theme` TEXT NOT NULL, `dynamicColors` INTEGER NOT NULL, `seedColor` INTEGER NOT NULL, `fontFamily` TEXT NOT NULL, `messageCornerRadius` INTEGER NOT NULL, `compactLayout` INTEGER NOT NULL, `enterToSend` INTEGER NOT NULL, `showAvatarsInThread` INTEGER NOT NULL, `openRouterApiKey` TEXT, PRIMARY KEY(`id`))");
+        db.execSQL("CREATE TABLE IF NOT EXISTS `app_settings` (`id` INTEGER NOT NULL, `fasterSync` INTEGER NOT NULL, `fasterSyncMinutes` INTEGER NOT NULL, `swipeActionLeft` TEXT NOT NULL, `swipeActionRight` TEXT NOT NULL, `notificationsEnabled` INTEGER NOT NULL, `notificationImportance` INTEGER NOT NULL, `notificationSoundUri` TEXT, `vibrationEnabled` INTEGER NOT NULL, `theme` TEXT NOT NULL, `dynamicColors` INTEGER NOT NULL, `seedColor` INTEGER NOT NULL, `fontFamily` TEXT NOT NULL, `messageCornerRadius` INTEGER NOT NULL, `compactLayout` INTEGER NOT NULL, `enterToSend` INTEGER NOT NULL, `showAvatarsInThread` INTEGER NOT NULL, `openRouterApiKey` TEXT, `openRouterModel` TEXT NOT NULL, PRIMARY KEY(`id`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS `sync_states` (`accountId` TEXT NOT NULL, `lastCursor` TEXT, `lastSuccessAt` INTEGER, `lastError` TEXT, PRIMARY KEY(`accountId`))");
         db.execSQL("CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)");
-        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bdc4353e6e0e02062b090ed210a23a22')");
+        db.execSQL("INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '79768be3da25614b7a6ea1d318595a54')");
       }
 
       @Override
@@ -262,7 +262,7 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
                   + " Expected:\n" + _infoAttachments + "\n"
                   + " Found:\n" + _existingAttachments);
         }
-        final HashMap<String, TableInfo.Column> _columnsAppSettings = new HashMap<String, TableInfo.Column>(18);
+        final HashMap<String, TableInfo.Column> _columnsAppSettings = new HashMap<String, TableInfo.Column>(19);
         _columnsAppSettings.put("id", new TableInfo.Column("id", "INTEGER", true, 1, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAppSettings.put("fasterSync", new TableInfo.Column("fasterSync", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAppSettings.put("fasterSyncMinutes", new TableInfo.Column("fasterSyncMinutes", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
@@ -281,6 +281,7 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
         _columnsAppSettings.put("enterToSend", new TableInfo.Column("enterToSend", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAppSettings.put("showAvatarsInThread", new TableInfo.Column("showAvatarsInThread", "INTEGER", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         _columnsAppSettings.put("openRouterApiKey", new TableInfo.Column("openRouterApiKey", "TEXT", false, 0, null, TableInfo.CREATED_FROM_ENTITY));
+        _columnsAppSettings.put("openRouterModel", new TableInfo.Column("openRouterModel", "TEXT", true, 0, null, TableInfo.CREATED_FROM_ENTITY));
         final HashSet<TableInfo.ForeignKey> _foreignKeysAppSettings = new HashSet<TableInfo.ForeignKey>(0);
         final HashSet<TableInfo.Index> _indicesAppSettings = new HashSet<TableInfo.Index>(0);
         final TableInfo _infoAppSettings = new TableInfo("app_settings", _columnsAppSettings, _foreignKeysAppSettings, _indicesAppSettings);
@@ -306,7 +307,7 @@ public final class ThreadlyDatabase_Impl extends ThreadlyDatabase {
         }
         return new RoomOpenHelper.ValidationResult(true, null);
       }
-    }, "bdc4353e6e0e02062b090ed210a23a22", "1fea845afe86219735634fb30298ad46");
+    }, "79768be3da25614b7a6ea1d318595a54", "a0518edd7255ccf11a9f724914c48b61");
     final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(config.context).name(config.name).callback(_openCallback).build();
     final SupportSQLiteOpenHelper _helper = config.sqliteOpenHelperFactory.create(_sqliteConfig);
     return _helper;
