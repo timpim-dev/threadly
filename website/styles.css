@@ -121,6 +121,11 @@ main {
     height: auto;
     display: block;
     filter: grayscale(100%);
+    transition: filter 0.3s ease;
+}
+
+.hero-image img:hover {
+    filter: grayscale(0%);
 }
 
 .features {
