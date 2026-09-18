@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.threadly.felixx.dev.app-mergeReleaseResources-65:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "/Users/lilly/.gradle/caches/9.7.1/transforms/5997571885b85566e22c9171f106de6e/transformed/material3-release/res/values-v30/values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}
