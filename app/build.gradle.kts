@@ -24,8 +24,11 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
-        buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"${localProperties.getProperty("google_server_client_id", "")}\"")
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.threadly.felixx.dev"
+        val googleClientId = localProperties.getProperty("google_server_client_id", "826470452925-2neg6a6md5kc84fft5er82jf3r5l9lle.apps.googleusercontent.com")
+        val reversedClientId = googleClientId.split(".").reversed().joinToString(".")
+        buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"$googleClientId\"")
+        buildConfigField("String", "APP_AUTH_REDIRECT_SCHEME", "\"$reversedClientId\"")
+        manifestPlaceholders["appAuthRedirectScheme"] = reversedClientId
     }
 
     buildTypes {

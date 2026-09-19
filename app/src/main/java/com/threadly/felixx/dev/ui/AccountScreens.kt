@@ -136,7 +136,7 @@ fun ProviderSelectionScreen(
                     )
 
                     val clientId = BuildConfig.GOOGLE_SERVER_CLIENT_ID
-                    val redirectUri = Uri.parse("com.threadly.felixx.dev:/oauth2redirect")
+                    val redirectUri = Uri.parse("${BuildConfig.APP_AUTH_REDIRECT_SCHEME}:/oauth2redirect")
 
                     val authRequestBuilder = AuthorizationRequest.Builder(
                         serviceConfig,

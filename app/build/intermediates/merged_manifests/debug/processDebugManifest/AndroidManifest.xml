@@ -74,7 +74,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="com.threadly.felixx.dev" />
+                <data android:scheme="com.googleusercontent.apps.826470452925-2neg6a6md5kc84fft5er82jf3r5l9lle" />
             </intent-filter>
         </activity>
 

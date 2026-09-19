@@ -138,7 +138,7 @@
 75-->[net.openid:appauth:0.11.1] /Users/lilly/.gradle/caches/9.7.1/transforms/ac84eca798a075fe136298311bc5a17f/transformed/appauth-0.11.1/AndroidManifest.xml:28:13-74
 75-->[net.openid:appauth:0.11.1] /Users/lilly/.gradle/caches/9.7.1/transforms/ac84eca798a075fe136298311bc5a17f/transformed/appauth-0.11.1/AndroidManifest.xml:28:23-71
 76
-77                <data android:scheme="com.threadly.felixx.dev" />
+77                <data android:scheme="com.googleusercontent.apps.826470452925-2neg6a6md5kc84fft5er82jf3r5l9lle" />
 77-->[net.openid:appauth:0.11.1] /Users/lilly/.gradle/caches/9.7.1/transforms/ac84eca798a075fe136298311bc5a17f/transformed/appauth-0.11.1/AndroidManifest.xml:30:13-44
 77-->[net.openid:appauth:0.11.1] /Users/lilly/.gradle/caches/9.7.1/transforms/ac84eca798a075fe136298311bc5a17f/transformed/appauth-0.11.1/AndroidManifest.xml:30:19-41
 78            </intent-filter>

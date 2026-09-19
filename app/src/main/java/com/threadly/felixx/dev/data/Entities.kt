@@ -120,6 +120,7 @@ data class AppSettingsEntity(
     val compactLayout: Boolean = false,
     val enterToSend: Boolean = false,
     val showAvatarsInThread: Boolean = true,
+    val defaultClubId: String = "unsorted",
     val openRouterApiKey: String? = null,
     val openRouterModel: String = "meta-llama/llama-3.3-70b-instruct:free"
 )

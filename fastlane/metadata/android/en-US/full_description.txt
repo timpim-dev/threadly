@@ -1,0 +1,8 @@
+Threadly is an Android email client that organizes your emails by Clubs rather than traditional inboxes. It features threaded conversations, AI integration, and a modern Compose UI.
+
+Features:
+- Club-Based Organization: Group your emails into distinct clubs.
+- Intelligent Threading: Emails are grouped into conversation threads for easy reading.
+- AI Assistant: Integrated with OpenRouter to provide summaries, Q&A, and draft replies for your email threads (requires an OpenRouter API key).
+- Modern UI: Built entirely with Jetpack Compose.
+- Google OAuth Integration: Securely log in with your Google account.

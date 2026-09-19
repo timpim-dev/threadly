@@ -6,6 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
 class RoomConverters {
     @androidx.room.TypeConverter fun status(value: String) = AccountStatus.valueOf(value)
     @androidx.room.TypeConverter fun status(value: AccountStatus) = value.name
@@ -15,9 +18,15 @@ class RoomConverters {
     @androidx.room.TypeConverter fun swipe(value: SwipeAction) = value.name
 }
 
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE app_settings ADD COLUMN defaultClubId TEXT NOT NULL DEFAULT 'unsorted'")
+    }
+}
+
 @Database(
     entities = [AccountEntity::class, ClubEntity::class, ClubAccountCrossRef::class, ClubKeywordEntity::class, ClubContactEntity::class, ThreadEntity::class, MessageEntity::class, AttachmentEntity::class, AppSettingsEntity::class, SyncStateEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(RoomConverters::class)
@@ -30,6 +39,9 @@ abstract class ThreadlyDatabase : RoomDatabase() {
     abstract fun syncStates(): SyncStateDao
 
     companion object {
-        fun create(context: Context): ThreadlyDatabase = Room.databaseBuilder(context, ThreadlyDatabase::class.java, "threadly.db").fallbackToDestructiveMigration().build()
+        fun create(context: Context): ThreadlyDatabase = Room.databaseBuilder(context, ThreadlyDatabase::class.java, "threadly.db")
+            .addMigrations(MIGRATION_5_6)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 }

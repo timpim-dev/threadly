@@ -1,0 +1,27 @@
+Categories:
+  - Internet
+  - Connectivity
+License: MIT
+AuthorName: Felix
+AuthorEmail: fake.felix@protonmail.com
+SourceCode: https://github.com/timpim-dev/threadly
+IssueTracker: https://github.com/timpim-dev/threadly/issues
+
+AutoName: Threadly
+Summary: Club-based email client
+
+RepoType: git
+Repo: https://github.com/timpim-dev/threadly.git
+
+Builds:
+  - versionName: '1.0'
+    versionCode: 1
+    commit: HEAD
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: '1.0'
+CurrentVersionCode: 1

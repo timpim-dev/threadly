@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,8 +41,14 @@ fun HomeScreen(onThread: (String) -> Unit, onProfile: () -> Unit, onCompose: () 
     val clubs by app.repository.clubs.collectAsState(emptyList())
     val accounts by app.repository.accounts.collectAsState(emptyList())
     val isSyncing by app.isSyncing.collectAsState()
+    val settings by app.repository.settings.collectAsState(null)
     
-    var selectedClubId by remember { mutableStateOf("unsorted") }
+    var selectedClubId by rememberSaveable { mutableStateOf("unsorted") }
+    LaunchedEffect(settings?.defaultClubId) {
+        if (selectedClubId == "unsorted" && settings?.defaultClubId != null) {
+            selectedClubId = settings!!.defaultClubId
+        }
+    }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     
@@ -138,7 +145,56 @@ fun HomeScreen(onThread: (String) -> Unit, onProfile: () -> Unit, onCompose: () 
                     }
                 }
                 
-                items(threads, key = { it.id }) { thread -> ThreadRow(thread) { onThread(thread.id) } }
+                items(threads, key = { it.id }) { thread -> 
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = {
+                            when (it) {
+                                SwipeToDismissBoxValue.StartToEnd -> {
+                                    val action = settings?.swipeActionRight ?: SwipeAction.ARCHIVE
+                                    if (action == SwipeAction.ARCHIVE) {
+                                        scope.launch { app.repository.archive(thread.id) }
+                                        true
+                                    } else {
+                                        if (action == SwipeAction.MARK_READ) scope.launch { app.repository.markRead(thread.id) }
+                                        // TODO handle SNOOZE later
+                                        false
+                                    }
+                                }
+                                SwipeToDismissBoxValue.EndToStart -> {
+                                    val action = settings?.swipeActionLeft ?: SwipeAction.MARK_READ
+                                    if (action == SwipeAction.ARCHIVE) {
+                                        scope.launch { app.repository.archive(thread.id) }
+                                        true
+                                    } else {
+                                        if (action == SwipeAction.MARK_READ) scope.launch { app.repository.markRead(thread.id) }
+                                        // TODO handle SNOOZE later
+                                        false
+                                    }
+                                }
+                                else -> false
+                            }
+                        },
+                        positionalThreshold = { it * 0.5f }
+                    )
+                    
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        backgroundContent = {
+                            val targetValue = dismissState.targetValue
+                            if (targetValue != SwipeToDismissBoxValue.Settled) {
+                                val action = if (targetValue == SwipeToDismissBoxValue.StartToEnd) (settings?.swipeActionRight ?: SwipeAction.ARCHIVE) else (settings?.swipeActionLeft ?: SwipeAction.MARK_READ)
+                                val color = if (action == SwipeAction.ARCHIVE) Color(0xFFE57373) else Color(0xFF81C784)
+                                val icon = if (action == SwipeAction.ARCHIVE) Icons.Default.Archive else Icons.Default.MarkEmailRead
+                                val alignment = if (targetValue == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd
+                                Box(Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)).background(color).padding(horizontal = 24.dp), contentAlignment = alignment) {
+                                    Icon(icon, contentDescription = action.name, tint = Color.White)
+                                }
+                            }
+                        }
+                    ) {
+                        ThreadRow(thread) { onThread(thread.id) }
+                    }
+                }
                 
                 if (threads.isEmpty() && accounts.isNotEmpty()) {
                     item { EmptyState("No conversations", "New messages will appear here.") }
@@ -444,6 +500,38 @@ fun ThreadScreen(id: String, onBack: () -> Unit) {
             
             item { Text("Chat & UX", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp)) }
             item {
+                var showClubDialog by remember { mutableStateOf(false) }
+                val clubs by app.repository.clubs.collectAsState(emptyList())
+                val currentClub = clubs.find { it.id == (settings?.defaultClubId ?: "unsorted") }?.name ?: "Unsorted Mail"
+                
+                ListItem(
+                    headlineContent = { Text("Default Club on Startup") },
+                    supportingContent = { Text(currentClub) },
+                    modifier = Modifier.clickable { showClubDialog = true }
+                )
+                if (showClubDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showClubDialog = false },
+                        title = { Text("Select Default Club") },
+                        text = {
+                            LazyColumn {
+                                item {
+                                    ListItem(
+                                        headlineContent = { Text("Unsorted Mail") },
+                                        modifier = Modifier.clickable { updateSettings { copy(defaultClubId = "unsorted") }; showClubDialog = false }
+                                    )
+                                }
+                                items(clubs.filter { it.id != "unsorted" }, key = { it.id }) { club ->
+                                    ListItem(
+                                        headlineContent = { Text(club.name) },
+                                        modifier = Modifier.clickable { updateSettings { copy(defaultClubId = club.id) }; showClubDialog = false }
+                                    )
+                                }
+                            }
+                        },
+                        confirmButton = { TextButton(onClick = { showClubDialog = false }) { Text("Cancel") } }
+                    )
+                }
                 ListItem(headlineContent = { Text("Show Avatars in Thread") }, trailingContent = { Switch(settings?.showAvatarsInThread ?: true, { v -> updateSettings { copy(showAvatarsInThread = v) } }) })
                 ListItem(headlineContent = { Text("Enter to Send") }, trailingContent = { Switch(settings?.enterToSend ?: false, { v -> updateSettings { copy(enterToSend = v) } }) })
                 ListItem(headlineContent = { Text("Compact Layout") }, trailingContent = { Switch(settings?.compactLayout ?: false, { v -> updateSettings { copy(compactLayout = v) } }) })

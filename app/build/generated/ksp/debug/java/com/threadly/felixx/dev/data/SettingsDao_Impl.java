@@ -40,7 +40,7 @@ public final class SettingsDao_Impl implements SettingsDao {
       @Override
       @NonNull
       protected String createQuery() {
-        return "INSERT OR REPLACE INTO `app_settings` (`id`,`fasterSync`,`fasterSyncMinutes`,`swipeActionLeft`,`swipeActionRight`,`notificationsEnabled`,`notificationImportance`,`notificationSoundUri`,`vibrationEnabled`,`theme`,`dynamicColors`,`seedColor`,`fontFamily`,`messageCornerRadius`,`compactLayout`,`enterToSend`,`showAvatarsInThread`,`openRouterApiKey`,`openRouterModel`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        return "INSERT OR REPLACE INTO `app_settings` (`id`,`fasterSync`,`fasterSyncMinutes`,`swipeActionLeft`,`swipeActionRight`,`notificationsEnabled`,`notificationImportance`,`notificationSoundUri`,`vibrationEnabled`,`theme`,`dynamicColors`,`seedColor`,`fontFamily`,`messageCornerRadius`,`compactLayout`,`enterToSend`,`showAvatarsInThread`,`defaultClubId`,`openRouterApiKey`,`openRouterModel`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       }
 
       @Override
@@ -76,12 +76,13 @@ public final class SettingsDao_Impl implements SettingsDao {
         statement.bindLong(16, _tmp_7);
         final int _tmp_8 = entity.getShowAvatarsInThread() ? 1 : 0;
         statement.bindLong(17, _tmp_8);
+        statement.bindString(18, entity.getDefaultClubId());
         if (entity.getOpenRouterApiKey() == null) {
-          statement.bindNull(18);
+          statement.bindNull(19);
         } else {
-          statement.bindString(18, entity.getOpenRouterApiKey());
+          statement.bindString(19, entity.getOpenRouterApiKey());
         }
-        statement.bindString(19, entity.getOpenRouterModel());
+        statement.bindString(20, entity.getOpenRouterModel());
       }
     };
   }
@@ -132,6 +133,7 @@ public final class SettingsDao_Impl implements SettingsDao {
           final int _cursorIndexOfCompactLayout = CursorUtil.getColumnIndexOrThrow(_cursor, "compactLayout");
           final int _cursorIndexOfEnterToSend = CursorUtil.getColumnIndexOrThrow(_cursor, "enterToSend");
           final int _cursorIndexOfShowAvatarsInThread = CursorUtil.getColumnIndexOrThrow(_cursor, "showAvatarsInThread");
+          final int _cursorIndexOfDefaultClubId = CursorUtil.getColumnIndexOrThrow(_cursor, "defaultClubId");
           final int _cursorIndexOfOpenRouterApiKey = CursorUtil.getColumnIndexOrThrow(_cursor, "openRouterApiKey");
           final int _cursorIndexOfOpenRouterModel = CursorUtil.getColumnIndexOrThrow(_cursor, "openRouterModel");
           final AppSettingsEntity _result;
@@ -192,6 +194,8 @@ public final class SettingsDao_Impl implements SettingsDao {
             final int _tmp_8;
             _tmp_8 = _cursor.getInt(_cursorIndexOfShowAvatarsInThread);
             _tmpShowAvatarsInThread = _tmp_8 != 0;
+            final String _tmpDefaultClubId;
+            _tmpDefaultClubId = _cursor.getString(_cursorIndexOfDefaultClubId);
             final String _tmpOpenRouterApiKey;
             if (_cursor.isNull(_cursorIndexOfOpenRouterApiKey)) {
               _tmpOpenRouterApiKey = null;
@@ -200,7 +204,7 @@ public final class SettingsDao_Impl implements SettingsDao {
             }
             final String _tmpOpenRouterModel;
             _tmpOpenRouterModel = _cursor.getString(_cursorIndexOfOpenRouterModel);
-            _result = new AppSettingsEntity(_tmpId,_tmpFasterSync,_tmpFasterSyncMinutes,_tmpSwipeActionLeft,_tmpSwipeActionRight,_tmpNotificationsEnabled,_tmpNotificationImportance,_tmpNotificationSoundUri,_tmpVibrationEnabled,_tmpTheme,_tmpDynamicColors,_tmpSeedColor,_tmpFontFamily,_tmpMessageCornerRadius,_tmpCompactLayout,_tmpEnterToSend,_tmpShowAvatarsInThread,_tmpOpenRouterApiKey,_tmpOpenRouterModel);
+            _result = new AppSettingsEntity(_tmpId,_tmpFasterSync,_tmpFasterSyncMinutes,_tmpSwipeActionLeft,_tmpSwipeActionRight,_tmpNotificationsEnabled,_tmpNotificationImportance,_tmpNotificationSoundUri,_tmpVibrationEnabled,_tmpTheme,_tmpDynamicColors,_tmpSeedColor,_tmpFontFamily,_tmpMessageCornerRadius,_tmpCompactLayout,_tmpEnterToSend,_tmpShowAvatarsInThread,_tmpDefaultClubId,_tmpOpenRouterApiKey,_tmpOpenRouterModel);
           } else {
             _result = null;
           }
@@ -245,6 +249,7 @@ public final class SettingsDao_Impl implements SettingsDao {
           final int _cursorIndexOfCompactLayout = CursorUtil.getColumnIndexOrThrow(_cursor, "compactLayout");
           final int _cursorIndexOfEnterToSend = CursorUtil.getColumnIndexOrThrow(_cursor, "enterToSend");
           final int _cursorIndexOfShowAvatarsInThread = CursorUtil.getColumnIndexOrThrow(_cursor, "showAvatarsInThread");
+          final int _cursorIndexOfDefaultClubId = CursorUtil.getColumnIndexOrThrow(_cursor, "defaultClubId");
           final int _cursorIndexOfOpenRouterApiKey = CursorUtil.getColumnIndexOrThrow(_cursor, "openRouterApiKey");
           final int _cursorIndexOfOpenRouterModel = CursorUtil.getColumnIndexOrThrow(_cursor, "openRouterModel");
           final AppSettingsEntity _result;
@@ -305,6 +310,8 @@ public final class SettingsDao_Impl implements SettingsDao {
             final int _tmp_8;
             _tmp_8 = _cursor.getInt(_cursorIndexOfShowAvatarsInThread);
             _tmpShowAvatarsInThread = _tmp_8 != 0;
+            final String _tmpDefaultClubId;
+            _tmpDefaultClubId = _cursor.getString(_cursorIndexOfDefaultClubId);
             final String _tmpOpenRouterApiKey;
             if (_cursor.isNull(_cursorIndexOfOpenRouterApiKey)) {
               _tmpOpenRouterApiKey = null;
@@ -313,7 +320,7 @@ public final class SettingsDao_Impl implements SettingsDao {
             }
             final String _tmpOpenRouterModel;
             _tmpOpenRouterModel = _cursor.getString(_cursorIndexOfOpenRouterModel);
-            _result = new AppSettingsEntity(_tmpId,_tmpFasterSync,_tmpFasterSyncMinutes,_tmpSwipeActionLeft,_tmpSwipeActionRight,_tmpNotificationsEnabled,_tmpNotificationImportance,_tmpNotificationSoundUri,_tmpVibrationEnabled,_tmpTheme,_tmpDynamicColors,_tmpSeedColor,_tmpFontFamily,_tmpMessageCornerRadius,_tmpCompactLayout,_tmpEnterToSend,_tmpShowAvatarsInThread,_tmpOpenRouterApiKey,_tmpOpenRouterModel);
+            _result = new AppSettingsEntity(_tmpId,_tmpFasterSync,_tmpFasterSyncMinutes,_tmpSwipeActionLeft,_tmpSwipeActionRight,_tmpNotificationsEnabled,_tmpNotificationImportance,_tmpNotificationSoundUri,_tmpVibrationEnabled,_tmpTheme,_tmpDynamicColors,_tmpSeedColor,_tmpFontFamily,_tmpMessageCornerRadius,_tmpCompactLayout,_tmpEnterToSend,_tmpShowAvatarsInThread,_tmpDefaultClubId,_tmpOpenRouterApiKey,_tmpOpenRouterModel);
           } else {
             _result = null;
           }
